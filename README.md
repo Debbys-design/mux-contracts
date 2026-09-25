@@ -9,6 +9,8 @@ This repository contains the **core Soroban smart contracts** that power Mux. Co
 - Permissions and delegation
 - Automated workflows for Stellar accounts
 
+See [`docs/aa_sequence_diagram.md`](docs/aa_sequence_diagram.md) for the authoritative account-abstraction sequence diagram covering account creation, delegation, spending policy, recovery, and batcher flows.
+
 ## Contracts
 
 | Contract | Description |
@@ -55,6 +57,21 @@ Mux ships **two distinct registries**. They are not interchangeable and must not
 | `mux-wallet-registry` read | ✅ | ✅ | ✅ | ✅ |
 
 Clients cannot bypass policy: privileged writes are deny-by-default and require the owner (or an explicitly granted delegate for the wallet registry). API-key/JWT callers are read-only against both registries.
+
+## WASM Size Budget & CI Artifacts
+
+The CI pipeline ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) builds every contract to `wasm32-unknown-unknown` and enforces a **fail-closed WASM size budget**: if any compiled contract exceeds the configured limit, the build fails and the PR cannot merge.
+
+- **Budget:** `MAX_WASM_SIZE_BYTES` (default `262144` bytes / 256 KiB) is defined in the `wasm-size-budget` job in `.github/workflows/ci.yml`.
+- **Adjusting the budget:** edit `MAX_WASM_SIZE_BYTES` in that job. Raising it is a deliberate, reviewable change — keep it as small as the largest legitimate contract allows so accidental bloat is caught early.
+- **Artifacts:** the built `.wasm` files are uploaded as the `wasm-artifacts` artifact on every CI run, so contributors and reviewers can download and inspect the exact binaries that were size-checked.
+
+To reproduce the check locally:
+
+```bash
+cargo build --target wasm32-unknown-unknown --release --workspace
+find target/wasm32-unknown-unknown/release -maxdepth 1 -name '*.wasm' -exec ls -l {} \;
+```
 
 ## TypeScript Bindings
 
@@ -258,8 +275,7 @@ async function handleContractCall(req, res) {
 - **401 Unauthorized** — `Unauthorized`, `Expired`
 - **404 Not Found** — `*NotFound`, `*NotInRole`, `*NotInitialized` (when expected to exist)
 - **400 Bad Request** — Invalid input, validation failures, constraint violations
-- **409 Conflict** — `AlreadyInitialized`
-- **500 Internal Server Error** — Unexpected or initialization errors
+- **409 Conflict** — `AlreadyInitial
 
 ## Local Soroban Development
 
