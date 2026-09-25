@@ -74,6 +74,16 @@ We will not pursue legal action against researchers who follow these guidelines.
 
 See [docs/threat-model.md](docs/threat-model.md) for the current threat model, trust boundaries, and known mitigations.
 
+## Architecture Overview
+
+The current crate set, inter-crate relationships, and the invariants that all
+crates must uphold (contract as source of truth for spends/recovery/admin,
+deny-by-default for privileged surfaces, fail-closed on RPC/DB/Horizon outages
+for writes) are documented in [docs/architecture-overview.md](docs/architecture-overview.md).
+That document is the authoritative reference for the crate set and the
+authorization model (owner/delegate/guardian/API-key/JWT); report issues that
+violate its invariants against it.
+
 ## Partial Crate Rollback
 
 Partial rollback is a privileged, money-path-adjacent surface. It is authorized
